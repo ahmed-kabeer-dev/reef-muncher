@@ -1,49 +1,204 @@
+/* Reef Muncher: global styles and design tokens. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --aqua-1: #c8f6ff;
+  --aqua-2: #3fd0dc;
+  --aqua-3: #11a5bc;
+  --aqua-4: #0a6c80;
+  --aqua-5: #053b4d;
+
+  --ink: #08334a;
+  --coral: #ff6b5a;
+  --coral-press: #d9483a;
+  --sun: #ffd23f;
+  --aqua: #1cc8d8;
+  --success: #2fcb7a;
+  --danger: #ff4d4d;
+  --purple: #7b5cff;
+  --night: #031826;
+  --muted: #4c6f82;
+  --disabled: #b7cbd4;
+
+  --font-head: var(--font-fredoka), "Trebuchet MS", sans-serif;
+  --font-body: var(--font-nunito), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
 
-html {
-  height: 100%;
-}
+html, body { margin: 0; padding: 0; min-height: 100%; }
 
-html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--aqua-1), var(--aqua-2) 40%, var(--aqua-3) 75%, var(--aqua-4));
+  background-attachment: fixed;
 }
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+h1, h2, h3 { font-family: var(--font-head); margin: 0; }
+a { color: var(--aqua-4); font-weight: 700; }
+
+/* ---------- Cards, buttons, inputs ---------- */
+
+.card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(5, 59, 77, 0.25);
+  padding: 32px;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+.btn {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 18px;
+  color: #fff;
+  background: var(--coral);
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 24px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--coral-press);   /* the darker bottom edge */
+  transition: transform 80ms, box-shadow 80ms;
+  width: 100%;
+}
+.btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 0 0 var(--coral-press); }
+.btn:disabled { background: var(--disabled); box-shadow: 0 5px 0 #92a9b3; cursor: not-allowed; }
+.btn:focus-visible, .input:focus-visible, .link-btn:focus-visible, .icon-btn:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.btn-secondary { background: var(--aqua); box-shadow: 0 5px 0 var(--aqua-3); color: var(--ink); }
+.btn-secondary:active:not(:disabled) { box-shadow: 0 0 0 var(--aqua-3); }
+
+.link-btn {
+  background: none; border: 0; padding: 4px;
+  font: inherit; font-weight: 700; color: var(--aqua-4);
+  text-decoration: underline; cursor: pointer;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-weight: 700; margin-bottom: 6px; }
+
+.input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--disabled);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.input:focus { border-color: var(--aqua-3); }
+.input.invalid { border-color: var(--danger); }
+.input.valid { border-color: var(--success); }
+
+.input-row { position: relative; }
+.input-row .input { padding-right: 76px; }
+.icon-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 700; color: var(--aqua-4);
+  padding: 6px 8px; border-radius: 8px;
+}
+
+.hint { font-size: 14px; margin-top: 6px; color: var(--muted); min-height: 20px; }
+.hint.ok { color: #178a50; }
+.hint.bad { color: #c62828; }
+
+.error-box {
+  background: #ffe9e9;
+  border: 2px solid var(--danger);
+  color: #8a1c1c;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.check-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 15px; }
+.check-row input { width: 20px; height: 20px; accent-color: var(--coral); }
+
+.divider { text-align: center; color: var(--muted); font-size: 14px; margin: 16px 0; }
+
+/* ---------- Auth layout (split screen) ---------- */
+
+.auth-page { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.auth-art { position: relative; overflow: hidden; min-height: 280px; }
+.auth-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.auth-art-title {
+  position: absolute; left: 0; right: 0; top: 12%; text-align: center; color: #fff;
+  font-family: var(--font-head); font-weight: 700; font-size: clamp(40px, 6vw, 72px);
+  text-shadow: 0 5px 0 var(--aqua-5);
+}
+.auth-art-sub { position: absolute; left: 0; right: 0; top: calc(12% + 90px); text-align: center; color: #fff; font-weight: 700; text-shadow: 0 2px 0 var(--aqua-5); }
+.auth-panel { display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-panel .card { width: 100%; max-width: 440px; animation: slideIn 350ms ease-out; }
+.auth-panel h2 { font-size: 32px; margin-bottom: 4px; }
+.auth-panel .subtitle { color: var(--muted); margin: 0 0 20px; }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 860px) {
+  .auth-page { grid-template-columns: 1fr; }
+  .auth-art { min-height: 200px; }
+  .auth-art-sub { display: none; }
+}
+
+/* ---------- Ocean artwork animation ---------- */
+
+.art-bubble { fill: rgba(255, 255, 255, 0.55); animation: rise 9s linear infinite; }
+.art-bubble:nth-child(2n) { animation-duration: 12s; animation-delay: -4s; }
+.art-bubble:nth-child(3n) { animation-duration: 7s; animation-delay: -2s; }
+.art-fish { animation: swim 22s linear infinite; }
+.art-fish.f2 { animation-duration: 30s; animation-delay: -10s; }
+.art-fish.f3 { animation-duration: 26s; animation-delay: -18s; }
+.art-wave { animation: bob 6s ease-in-out infinite; }
+.art-wave.w2 { animation-delay: -3s; }
+
+@keyframes rise { from { transform: translateY(0); opacity: 0.9; } to { transform: translateY(-700px); opacity: 0; } }
+@keyframes swim { from { transform: translateX(-200px); } to { transform: translateX(1000px); } }
+@keyframes bob { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-30px); } }
+
+/* ---------- Password strength meter ---------- */
+
+.meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.meter span { height: 8px; border-radius: 4px; background: var(--disabled); transition: background 200ms; }
+.meter.lvl1 span:nth-child(-n+1) { background: var(--danger); }
+.meter.lvl2 span:nth-child(-n+2) { background: #ff9a3c; }
+.meter.lvl3 span:nth-child(-n+3) { background: var(--sun); }
+.meter.lvl4 span:nth-child(-n+4) { background: var(--success); }
+.meter-label { font-size: 14px; font-weight: 700; margin-top: 4px; }
+
+.rules { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; }
+.rules li { padding: 2px 0; color: var(--muted); }
+.rules li.met { color: #178a50; font-weight: 700; }
+/* icons AND colour: never colour alone */
+.rules li::before { content: "○ "; }
+.rules li.met::before { content: "✓ "; }
+
+/* ---------- Modal ---------- */
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(3, 24, 38, 0.65);
+  display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+}
+.modal { max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideIn 250ms ease-out; }
+.modal h2 { margin-bottom: 12px; }
+.modal ul { padding-left: 20px; line-height: 1.5; }
+.modal .btn { margin-top: 12px; }
+
+/* ---------- Simple page shell (menu placeholder etc.) ---------- */
+
+.page-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.page-center .card { max-width: 480px; width: 100%; text-align: center; }
+.page-center .card > * + * { margin-top: 14px; }
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .art-bubble, .art-fish, .art-wave, .auth-panel .card, .modal { animation: none; }
+  .btn { transition: none; }
 }
