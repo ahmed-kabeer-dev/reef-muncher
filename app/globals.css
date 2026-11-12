@@ -242,3 +242,40 @@ a.btn { display: block; text-align: center; text-decoration: none; }
   .play-layout { grid-template-columns: 1fr; }
   .hud-bar { gap: 12px; padding: 0 12px; overflow-x: auto; }
 }
+
+/* ---------- hearts, sonar, results ---------- */
+
+.hearts { gap: 4px; font-size: 30px; line-height: 1; }
+.heart.full { color: var(--danger); }
+.heart.empty { color: rgba(255, 255, 255, 0.55); }
+.hud-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sonar-frame { background: var(--aqua-1); border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; margin: 10px 0 12px; }
+.sonar-scan { position: relative; line-height: 0; }
+.sonar-scan::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 18%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.75), rgba(255,255,255,0));
+  animation: scanSweep 700ms ease-out 1 forwards; pointer-events: none;
+}
+@keyframes scanSweep { from { transform: translateY(-100%); } to { transform: translateY(560%); opacity: 0; } }
+.sonar-img { width: 100%; height: auto; display: block; }
+.sonar-empty { padding: 60px 12px; text-align: center; color: var(--muted); font-weight: 700; }
+
+.sonar-tag { margin: 0 0 12px; padding: 8px; }
+.sonar-digit { font-size: 48px; }
+
+.bonus-wrap { margin-bottom: 14px; }
+.bonus-head { display: flex; justify-content: space-between; align-items: center; }
+.bonus-bar { height: 14px; border-radius: 8px; background: var(--disabled); overflow: hidden; margin-top: 4px; }
+.bonus-fill { height: 100%; background: var(--sun); border-right: 3px solid var(--ink); transition: width 120ms linear; }
+
+.result-card { min-width: 340px; }
+.result-cause { font-family: var(--font-head); font-size: 22px; font-weight: 600; color: #c62828; }
+.result-table { width: 100%; border-collapse: collapse; font-size: 18px; }
+.result-table td { padding: 6px 4px; text-align: left; }
+.result-table td:last-child { text-align: right; font-weight: 700; }
+.result-total td { border-top: 3px solid var(--ink); font-family: var(--font-head); font-size: 24px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sonar-scan::after { animation: none; display: none; }
+}
