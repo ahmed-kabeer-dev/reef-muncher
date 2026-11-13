@@ -39,6 +39,7 @@ export default function ResultOverlay({ result, onAgain }) {
         {!win && <p className="hint">{TIPS[result.cause]}</p>}
 
         <button className="btn" onClick={onAgain}>Play again</button>
+                <Link className="btn btn-secondary" href="/habitats">Change habitat</Link>
         <Link className="btn btn-secondary" href="/menu">Main menu</Link>
       </div>
     </div>

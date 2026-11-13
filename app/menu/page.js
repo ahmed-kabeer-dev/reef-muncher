@@ -20,7 +20,7 @@ export default async function MenuPage() {
             ? "Playing as a guest (scores are not saved)."
             : `Welcome, ${session.username}!`}
         </p>
-        <Link className="btn" href="/play">Play (test)</Link>
+        <Link className="btn" href="/habitats">Play</Link>
         <LogoutButton />
       </div>
     </main>
