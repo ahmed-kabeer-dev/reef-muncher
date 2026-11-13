@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   getRisk, bigFishInterval, currentStrength, smallFishSpeedFactor,
   getTimeOfDay, timeMultiplier, lightRadius, speedBonus,
-  safeFishScore, winBonuses, applyRescanPenalty, getRank, circularDistance,
+  safeFishScore, winBonuses, applyRescanPenalty, getRank, badgeAlpha, darkness, circularDistance,
 } from "../lib/game/rules.js";
 
 describe("sea state rules", () => {
@@ -79,5 +79,20 @@ describe("scoring", () => {
     expect(getRank(1500)).toBe("Minnow");
     expect(getRank(4000)).toBe("Reef Hunter");
     expect(getRank(8000)).toBe("Apex Predator");
+  });
+});
+
+describe("night visibility", () => {
+  it("darkness by phase", () => {
+    expect(darkness("day")).toBe(0);
+    expect(darkness("twilight")).toBe(0.35);
+    expect(darkness("night")).toBe(0.85);
+  });
+  it("badgeAlpha: full inside the lamp, 35 percent outside, smooth between", () => {
+    expect(badgeAlpha(0, 230)).toBe(1);
+    expect(badgeAlpha(230, 230)).toBe(0.35);
+    expect(badgeAlpha(1000, 230)).toBe(0.35);
+    expect(badgeAlpha(230 * 0.875, 230)).toBeCloseTo(0.675, 3);
+    expect(badgeAlpha(500, null)).toBe(1); // day: no lamp, no dimming
   });
 });
