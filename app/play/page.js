@@ -2,18 +2,18 @@
 // Reef Muncher: Gameplay screen.
 // The page only wires things together: engine, run controller, server calls, UI.
 // - The run starts from a BUTTON CLICK (controller.start), never from a mount effect.
-// - The engine gets resolveBite(); the controller gets loaders. Neither knows about React.
+// - The engine gets resolveBite(); the controller gets loadRun(). Neither knows about React.
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GameEngine } from "../../lib/game/engine.js";
 import { RunController, PHASE } from "../../lib/game/runController.js";
-import { buildDifficulty } from "../../lib/game/difficulty.js";
 import { eventBus, EVENTS } from "../../lib/events/eventBus.js";
 import { postJson } from "../../lib/client/api.js";
 import { HABITATS } from "../../lib/game/rules.js";
 import Hud from "../../components/Hud.js";
 import SonarPanel from "../../components/SonarPanel.js";
+import HabitatMiniCard from "../../components/HabitatMiniCard.js";
 import ResultOverlay from "../../components/ResultOverlay.js";
 import CountdownOverlay from "../../components/CountdownOverlay.js";
 import DevDrawer from "../../components/DevDrawer.js";
@@ -22,7 +22,9 @@ const EMPTY_HUD = {
   size: 10, score: 0, combo: 1, hearts: 3, eaten: 0, poisoned: 0,
   seconds: 0, speedBonus: 100, status: "idle", paused: false, result: null,
 };
-const EMPTY_CTL = { phase: PHASE.IDLE, runId: 0, count: "", error: "", difficulty: null };
+const EMPTY_CTL = {
+  phase: PHASE.IDLE, runId: 0, count: "", error: "", difficulty: null, conditions: null,
+};
 
 export default function PlayPage() {
   const canvasRef = useRef(null);
@@ -32,6 +34,7 @@ export default function PlayPage() {
   const rescanBusyRef = useRef(false);
   const rescansLeftRef = useRef(3);
   const doRescanRef = useRef(null);
+  const overrideRef = useRef(null); // dev time-of-day override, read when a run starts
 
   const [hud, setHud] = useState(EMPTY_HUD);
   const [ctl, setCtl] = useState(EMPTY_CTL);
@@ -41,6 +44,7 @@ export default function PlayPage() {
   const [rescanBusy, setRescanBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [service, setService] = useState(null);
+  const [override, setOverride] = useState("auto");
 
   function showPicture(img) {
     setImage(img);
@@ -49,6 +53,10 @@ export default function PlayPage() {
   function updateRescans(n) {
     rescansLeftRef.current = n;
     setRescansLeft(n);
+  }
+  function changeOverride(value) {
+    setOverride(value);
+    overrideRef.current = value === "auto" ? null : value;
   }
 
   // ---------- One engine, one controller, destroyed on cleanup ----------
@@ -79,17 +87,23 @@ export default function PlayPage() {
 
     const controller = new RunController({
       engine,
-      loadPuzzle: (habitat) => postJson("/api/run/start", { habitat }, 3500),
-      loadConditions: async (habitat) => buildDifficulty(habitat), // Day 3: live Open-Meteo data
+      // One call: the server loads puzzle + sea + sun in parallel and decides the time of day.
+      loadRun: (habitat) =>
+        postJson("/api/run/start", { habitat, timeOverride: overrideRef.current }, 4500),
       onPuzzle: (data) => {
+        const c = data.conditions;
         runIdRef.current = data.runId;
         showPicture(data.image);
         updateRescans(data.rescansLeft);
         setNotice("");
-        setService({ source: data.source, ms: data.ms, error: data.error ?? null });
-        if (data.source === "fallback") {
-          eventBus.emit(EVENTS.API_FALLBACK_USED, { service: "fish", error: data.error });
-        }
+        setService({
+          source: data.source, ms: data.ms, error: data.error ?? null,
+          sea: c?.sea?.source ?? null, seaError: c?.sea?.error ?? null,
+          sun: c?.sun?.source ?? null, sunLabel: c?.sun?.label ?? null, sunError: c?.sun?.error ?? null,
+        });
+        if (data.source === "fallback") eventBus.emit(EVENTS.API_FALLBACK_USED, { service: "fish", error: data.error });
+        if (c?.sea?.source === "fallback") eventBus.emit(EVENTS.API_FALLBACK_USED, { service: "marine", error: c.sea.error });
+        if (c?.sun?.source === "fallback") eventBus.emit(EVENTS.API_FALLBACK_USED, { service: "sun", error: c.sun.error });
       },
       onChange: setCtl,
     });
@@ -154,6 +168,7 @@ export default function PlayPage() {
                 <p>Count the fish in the sonar picture. That number is the only safe tag.</p>
                 {ctl.error && <div className="error-box" role="alert">{ctl.error}</div>}
                 <button className="btn" onClick={startRun}>Dive in</button>
+                <Link className="btn btn-secondary" href="/habitats">Choose habitat</Link>
                 <Link className="btn btn-secondary" href="/menu">Back to menu</Link>
               </div>
             </div>
@@ -180,19 +195,29 @@ export default function PlayPage() {
           )}
         </div>
 
-        <SonarPanel
-          image={image}
-          pictureId={pictureId}
-          speedBonus={hud.speedBonus}
-          rescansLeft={rescansLeft}
-          rescanBusy={rescanBusy}
-          canRescan={playing}
-          onRescan={() => doRescanRef.current?.()}
-          notice={notice}
-        />
+        <div>
+          <SonarPanel
+            image={image}
+            pictureId={pictureId}
+            speedBonus={hud.speedBonus}
+            rescansLeft={rescansLeft}
+            rescanBusy={rescanBusy}
+            canRescan={playing}
+            onRescan={() => doRescanRef.current?.()}
+            notice={notice}
+          />
+          <HabitatMiniCard difficulty={ctl.difficulty} conditions={ctl.conditions} />
+        </div>
       </div>
 
-      <DevDrawer ctl={ctl} service={service} engineRef={engineRef} runIdRef={runIdRef} />
+      <DevDrawer
+        ctl={ctl}
+        service={service}
+        engineRef={engineRef}
+        runIdRef={runIdRef}
+        override={override}
+        onOverride={changeOverride}
+      />
     </main>
   );
 }
