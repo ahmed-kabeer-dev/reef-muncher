@@ -12,7 +12,7 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  const out = await startRun({ session, habitat: body?.habitat });
+  const out = await startRun({ session, habitat: body?.habitat, timeOverride: body?.timeOverride  });
   if (out.error && out.status) {
     return NextResponse.json({ error: out.error }, { status: out.status });
   }
