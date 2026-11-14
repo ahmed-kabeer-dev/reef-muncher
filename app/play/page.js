@@ -35,6 +35,7 @@ export default function PlayPage() {
   const rescansLeftRef = useRef(3);
   const doRescanRef = useRef(null);
   const overrideRef = useRef(null); // dev time-of-day override, read when a run starts
+  const savedRunRef = useRef(null); // the run id whose result was already sent
 
   const [hud, setHud] = useState(EMPTY_HUD);
   const [ctl, setCtl] = useState(EMPTY_CTL);
@@ -45,6 +46,7 @@ export default function PlayPage() {
   const [notice, setNotice] = useState("");
   const [service, setService] = useState(null);
   const [override, setOverride] = useState("auto");
+  const [save, setSave] = useState(null);
 
   function showPicture(img) {
     setImage(img);
@@ -93,6 +95,8 @@ export default function PlayPage() {
       onPuzzle: (data) => {
         const c = data.conditions;
         runIdRef.current = data.runId;
+        savedRunRef.current = null;
+        setSave(null);
         showPicture(data.image);
         updateRescans(data.rescansLeft);
         setNotice("");
@@ -108,11 +112,34 @@ export default function PlayPage() {
       onChange: setCtl,
     });
 
+    // Save the result ONCE per run. LEVEL_COMPLETE and GAME_OVER are bus events, so this is
+    // one more independent listener (the HUD and the developer drawer are others).
+    async function saveResult(r) {
+      const runId = runIdRef.current;
+      if (!runId || savedRunRef.current === runId) return; // never send the same run twice
+      savedRunRef.current = runId;
+      setSave({ status: "saving" });
+      try {
+        const data = await postJson("/api/run/finish", {
+          runId,
+          outcome: r.outcome,
+          score: r.finalScore,
+          seconds: r.seconds,
+          bestCombo: r.bestCombo,
+        });
+        setSave(data.saved ? { status: "saved", ...data } : { status: "guest" });
+      } catch (err) {
+        setSave({ status: "error", message: err.message });
+      }
+    }
+    const offs = [EVENTS.LEVEL_COMPLETE, EVENTS.GAME_OVER].map((name) => eventBus.on(name, saveResult));
+
     engineRef.current = engine;
     controllerRef.current = controller;
     engine.start(); // the loop runs (idle background), but nothing is playable until GO
 
     return () => {
+      offs.forEach((off) => off());
       controller.dispose();
       engine.destroy();
       engineRef.current = null;
@@ -191,7 +218,7 @@ export default function PlayPage() {
           )}
 
           {ctl.phase === PHASE.ENDED && hud.result && (
-            <ResultOverlay result={hud.result} onAgain={startRun} />
+            <ResultOverlay result={hud.result} save={save} onAgain={startRun} />
           )}
         </div>
 
